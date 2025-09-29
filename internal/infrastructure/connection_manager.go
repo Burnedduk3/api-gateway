@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	gormConn "product-service/internal/adapters/persistence/postgres"
-	"product-service/internal/config"
-	"product-service/pkg/logger"
+	gormConn "api-gateway/internal/adapters/persistence/postgres"
+	"api-gateway/internal/config"
+	"api-gateway/pkg/logger"
 
 	"gorm.io/gorm"
 )

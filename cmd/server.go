@@ -4,13 +4,13 @@ Copyright © 2025 Juan David Cabrera Duran juandavid.juandis@gmail.com
 package cmd
 
 import (
+	"api-gateway/internal/adapters/http"
+	"api-gateway/internal/config"
+	"api-gateway/internal/infrastructure"
+	"api-gateway/pkg/logger"
 	"context"
 	"os"
 	"os/signal"
-	"product-service/internal/adapters/http"
-	"product-service/internal/config"
-	"product-service/internal/infrastructure"
-	"product-service/pkg/logger"
 	"syscall"
 	"time"
 

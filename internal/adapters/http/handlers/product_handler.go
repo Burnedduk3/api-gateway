@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"product-service/internal/application/dto"
-	"product-service/internal/application/usecases"
-	domainErrors "product-service/internal/domain/errors"
-	"product-service/pkg/logger"
+	"api-gateway/internal/application/dto"
+	"api-gateway/internal/application/usecases"
+	domainErrors "api-gateway/internal/domain/errors"
+	"api-gateway/pkg/logger"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"

@@ -33,13 +33,13 @@ jobs:
         with:
           go-version: '1.25'
       - name: Build
-        run: go build -o product-service .
+        run: go build -o api-gateway .
       - name: upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: go-application
           retention-days: 1
-          path: product-service
+          path: api-gateway
 
   build-docker-image:
     runs-on: ubuntu-latest
@@ -52,14 +52,14 @@ jobs:
           name: go-application
       - name: Build docker image
         run: |
-          docker build -f docker/Dockerfile -t product-service:$MAYOR_VERSION.$MINOR_VERSION.${{ github.run_number }} .
-          docker save product-service:$MAYOR_VERSION.$MINOR_VERSION.${{ github.run_number }} -o product-service-image.tar
+          docker build -f docker/Dockerfile -t api-gateway:$MAYOR_VERSION.$MINOR_VERSION.${{ github.run_number }} .
+          docker save api-gateway:$MAYOR_VERSION.$MINOR_VERSION.${{ github.run_number }} -o api-gateway-image.tar
       - name: Upload Docker image artifact
         uses: actions/upload-artifact@v4
         with:
           name: docker-image
           retention-days: 1
-          path: product-service-image.tar
+          path: api-gateway-image.tar
 
   push-to-ecr:
     runs-on: ubuntu-latest
@@ -70,7 +70,7 @@ jobs:
         with:
           name: docker-image
       - name: Load Docker image
-        run: docker load -i product-service-image.tar
+        run: docker load -i api-gateway-image.tar
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -83,12 +83,12 @@ jobs:
       - name: Tag and push image to ECR
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: product-service
+          ECR_REPOSITORY: api-gateway
           IMAGE_TAG: ${{ env.MAYOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ github.run_number }}
           ENVIRONMENT: develop
         run: |
-          docker tag product-service:$IMAGE_TAG $ECR_REGISTRY/$ENVIRONMENT/$ECR_REPOSITORY:$IMAGE_TAG
-          docker tag product-service:$IMAGE_TAG $ECR_REGISTRY/$ENVIRONMENT/$ECR_REPOSITORY:latest
+          docker tag api-gateway:$IMAGE_TAG $ECR_REGISTRY/$ENVIRONMENT/$ECR_REPOSITORY:$IMAGE_TAG
+          docker tag api-gateway:$IMAGE_TAG $ECR_REGISTRY/$ENVIRONMENT/$ECR_REPOSITORY:latest
           docker push $ECR_REGISTRY/$ENVIRONMENT/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ENVIRONMENT/$ECR_REPOSITORY:latest
 

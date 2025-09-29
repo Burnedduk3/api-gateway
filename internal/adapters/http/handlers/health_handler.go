@@ -1,13 +1,13 @@
 package handlers
 
 import (
+	"api-gateway/internal/infrastructure"
 	"context"
 	"net/http"
-	"product-service/internal/infrastructure"
 	"runtime"
 	"time"
 
-	"product-service/pkg/logger"
+	"api-gateway/pkg/logger"
 
 	"github.com/labstack/echo/v4"
 )
@@ -62,7 +62,7 @@ func (h *HealthHandler) Health(c echo.Context) error {
 	response := HealthResponse{
 		Status:    "healthy",
 		Timestamp: time.Now(),
-		Service:   "product-service",
+		Service:   "api-gateway",
 		Version:   "1.0.0",
 		Uptime:    time.Since(h.startTime).String(),
 	}
@@ -119,7 +119,7 @@ func (h *HealthHandler) Ready(c echo.Context) error {
 	response := HealthResponse{
 		Status:    status,
 		Timestamp: time.Now(),
-		Service:   "product-service",
+		Service:   "api-gateway",
 		Version:   "1.0.0",
 		Uptime:    time.Since(h.startTime).String(),
 		Checks:    responseChecks,
@@ -145,7 +145,7 @@ func (h *HealthHandler) Live(c echo.Context) error {
 	response := HealthResponse{
 		Status:    "alive",
 		Timestamp: time.Now(),
-		Service:   "product-service",
+		Service:   "api-gateway",
 		Version:   "1.0.0",
 		Uptime:    time.Since(h.startTime).String(),
 	}
@@ -165,7 +165,7 @@ func (h *HealthHandler) Metrics(c echo.Context) error {
 	runtime.ReadMemStats(&m)
 
 	response := MetricsResponse{
-		Service:   "product-service",
+		Service:   "api-gateway",
 		Version:   "1.0.0",
 		Timestamp: time.Now(),
 		Uptime:    time.Since(h.startTime).String(),

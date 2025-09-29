@@ -6,7 +6,7 @@ import (
 	"errors"
 	"time"
 
-	"product-service/pkg/logger"
+	"api-gateway/pkg/logger"
 
 	gormLogger "gorm.io/gorm/logger"
 )

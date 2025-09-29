@@ -14,9 +14,9 @@ server:
 database:
   host: "localhost"
   port: "5432"
-  username: "product-service"
+  username: "api-gateway"
   password: "admin"
-  database: "product-service"
+  database: "api-gateway"
   ssl_mode: "disable"
 
 security:

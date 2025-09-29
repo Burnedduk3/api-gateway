@@ -1,7 +1,7 @@
 package logging
 
 import (
-	"product-service/pkg/logger"
+	"api-gateway/pkg/logger"
 	"time"
 
 	"github.com/labstack/echo/v4"

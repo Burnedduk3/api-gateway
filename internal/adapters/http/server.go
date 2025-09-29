@@ -1,15 +1,15 @@
 package http
 
 import (
+	"api-gateway/internal/adapters/http/handlers"
+	"api-gateway/internal/adapters/http/middlewares/logging"
+	"api-gateway/internal/adapters/persistence/product_repository"
+	"api-gateway/internal/application/usecases"
+	"api-gateway/internal/config"
+	"api-gateway/internal/infrastructure"
+	"api-gateway/pkg/logger"
 	"context"
 	"fmt"
-	"product-service/internal/adapters/http/handlers"
-	"product-service/internal/adapters/http/middlewares/logging"
-	"product-service/internal/adapters/persistence/product_repository"
-	"product-service/internal/application/usecases"
-	"product-service/internal/config"
-	"product-service/internal/infrastructure"
-	"product-service/pkg/logger"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"

@@ -22,9 +22,9 @@ func DatabaseDefaults(v *viper.Viper) {
 	// Database defaults
 	v.SetDefault("database.host", "localhost")
 	v.SetDefault("database.port", "5432")
-	v.SetDefault("database.username", "product-service")
+	v.SetDefault("database.username", "api-gateway")
 	v.SetDefault("database.password", "admin")
-	v.SetDefault("database.database", "product-service")
+	v.SetDefault("database.database", "api-gateway")
 	v.SetDefault("database.ssl_mode", "disable")
 	v.SetDefault("database.max_open_conns", 25)
 	v.SetDefault("database.max_idle_conns", 25)

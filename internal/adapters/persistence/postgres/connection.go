@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"product-service/internal/config"
-	"product-service/pkg/logger"
+	"api-gateway/internal/config"
+	"api-gateway/pkg/logger"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

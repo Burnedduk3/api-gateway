@@ -1,15 +1,15 @@
 package handlers
 
 import (
+	"api-gateway/internal/application/dto"
+	"api-gateway/internal/domain/entities"
+	domainErrors "api-gateway/internal/domain/errors"
+	"api-gateway/pkg/logger"
 	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"product-service/internal/application/dto"
-	"product-service/internal/domain/entities"
-	domainErrors "product-service/internal/domain/errors"
-	"product-service/pkg/logger"
 	"testing"
 
 	"github.com/labstack/echo/v4"

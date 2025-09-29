@@ -8,14 +8,14 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o product-service .
+RUN go build -o api-gateway .
 
 FROM alpine:3.22 AS app
 
 WORKDIR /app
 
-COPY --from=build /build/product-service /app
+COPY --from=build /build/api-gateway /app
 
-COPY configs/product-config.yaml /etc/product-service/config.yaml
+COPY configs/config-docker.yaml /etc/api-gateway/config.yaml
 
-ENTRYPOINT ["/app/product-service", "server"]
+ENTRYPOINT ["/app/api-gateway", "server"]

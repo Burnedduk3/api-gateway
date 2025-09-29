@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"product-service/internal/application/ports"
-	"product-service/internal/domain/entities"
-	domainErrors "product-service/internal/domain/errors"
+	"api-gateway/internal/application/ports"
+	"api-gateway/internal/domain/entities"
+	domainErrors "api-gateway/internal/domain/errors"
 
 	"gorm.io/gorm"
 )

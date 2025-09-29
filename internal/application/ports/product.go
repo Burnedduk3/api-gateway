@@ -1,8 +1,8 @@
 package ports
 
 import (
+	"api-gateway/internal/domain/entities"
 	"context"
-	"product-service/internal/domain/entities"
 )
 
 // ProductRepository defines the contract for product persistence

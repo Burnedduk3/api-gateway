@@ -4,9 +4,9 @@ Copyright © 2025 Juan David Cabrera Duran juandavid.juandis@gmail.com
 package cmd
 
 import (
+	"api-gateway/internal/config"
+	"api-gateway/pkg/logger"
 	"fmt"
-	"product-service/internal/config"
-	"product-service/pkg/logger"
 
 	"github.com/spf13/cobra"
 )

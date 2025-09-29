@@ -50,7 +50,7 @@ func Load(configFile, env string) (*Config, error) {
 	v.SetConfigType("yaml")
 	v.AddConfigPath(".")
 	v.AddConfigPath("./configs")
-	v.AddConfigPath("/etc/product-service")
+	v.AddConfigPath("/etc/api-gateway")
 
 	// Use specific config file if provided
 	if configFile != "" {

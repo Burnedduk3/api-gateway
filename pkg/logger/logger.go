@@ -60,7 +60,7 @@ func getZapConfig(env string) zap.Config {
 
 		// Add service information to all logs
 		config.InitialFields = map[string]interface{}{
-			"service": "product-service",
+			"service": "api-gateway",
 			"version": "1.0.0",
 		}
 		return config

@@ -1,7 +1,7 @@
 package dto
 
 import (
-	"product-service/internal/domain/entities"
+	"api-gateway/internal/domain/entities"
 	"time"
 )
 

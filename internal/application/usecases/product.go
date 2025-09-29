@@ -1,12 +1,12 @@
 package usecases
 
 import (
+	"api-gateway/internal/application/dto"
+	"api-gateway/internal/application/ports"
+	productErrors "api-gateway/internal/domain/errors"
+	"api-gateway/pkg/logger"
 	"context"
 	"errors"
-	"product-service/internal/application/dto"
-	"product-service/internal/application/ports"
-	productErrors "product-service/internal/domain/errors"
-	"product-service/pkg/logger"
 	"strings"
 )
 
