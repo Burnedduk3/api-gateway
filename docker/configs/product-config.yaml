@@ -1,0 +1,28 @@
+# configs/config.yaml
+environment: development
+
+version: 1.0.0
+
+server:
+  port: "8200"
+  host: "0.0.0.0"
+  read_timeout: "30s"
+  write_timeout: "30s"
+  cors:
+    allow_origins: ["*"]
+
+database:
+  host: "192.168.2.61"
+  port: "5432"
+  username: "product_user"
+  password: "admin"
+  database: "product_db"
+  ssl_mode: "disable"
+
+security:
+  rate_limit_rps: 100
+  rate_limit_burst: 200
+
+logging:
+  level: "debug"
+  format: "text"
