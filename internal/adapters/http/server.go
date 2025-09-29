@@ -3,8 +3,6 @@ package http
 import (
 	"api-gateway/internal/adapters/http/handlers"
 	"api-gateway/internal/adapters/http/middlewares/logging"
-	"api-gateway/internal/adapters/persistence/product_repository"
-	"api-gateway/internal/application/usecases"
 	"api-gateway/internal/config"
 	"api-gateway/internal/infrastructure"
 	"api-gateway/pkg/logger"
@@ -82,9 +80,6 @@ func (s *Server) setupRoutes() {
 	healthHandler := handlers.NewHealthHandler(s.logger, s.connections)
 
 	// Product repository and use cases setup
-	productRepo := product_repository.NewGormProductRepository(s.connections.GetGormDB())
-	productUseCases := usecases.NewProductUseCases(productRepo, s.logger)
-	productHandler := handlers.NewProductHandler(productUseCases, s.logger)
 
 	// API v1 routes
 	v1 := s.echo.Group("/api/v1")
@@ -97,29 +92,29 @@ func (s *Server) setupRoutes() {
 	// Metrics endpoint
 	v1.GET("/metrics", healthHandler.Metrics)
 
-	// Product endpoints
-	products := v1.Group("/products")
-	{
-		// Core CRUD operations
-		products.POST("", productHandler.CreateProduct)    // Create product
-		products.GET("", productHandler.ListProducts)      // List products with pagination
-		products.GET("/:id", productHandler.GetProduct)    // Get product by ID
-		products.PUT("/:id", productHandler.UpdateProduct) // Update product
-
-		// SKU-based operations
-		products.GET("/sku/:sku", productHandler.GetProductBySKU) // Get product by SKU
-
-		// Stock management
-		products.PATCH("/:id/stock", productHandler.UpdateProductStock) // Update stock only
-
-		// Price management
-		products.PATCH("/:id/price", productHandler.UpdateProductPrice) // Update price only
-
-		// Status management
-		products.PATCH("/:id/activate", productHandler.ActivateProduct)       // Activate product
-		products.PATCH("/:id/deactivate", productHandler.DeactivateProduct)   // Deactivate product
-		products.PATCH("/:id/discontinue", productHandler.DiscontinueProduct) // Discontinue product
-	}
+	//// Product endpoints
+	//products := v1.Group("/products")
+	//{
+	//	// Core CRUD operations
+	//	products.POST("", productHandler.CreateProduct)    // Create product
+	//	products.GET("", productHandler.ListProducts)      // List products with pagination
+	//	products.GET("/:id", productHandler.GetProduct)    // Get product by ID
+	//	products.PUT("/:id", productHandler.UpdateProduct) // Update product
+	//
+	//	// SKU-based operations
+	//	products.GET("/sku/:sku", productHandler.GetProductBySKU) // Get product by SKU
+	//
+	//	// Stock management
+	//	products.PATCH("/:id/stock", productHandler.UpdateProductStock) // Update stock only
+	//
+	//	// Price management
+	//	products.PATCH("/:id/price", productHandler.UpdateProductPrice) // Update price only
+	//
+	//	// Status management
+	//	products.PATCH("/:id/activate", productHandler.ActivateProduct)       // Activate product
+	//	products.PATCH("/:id/deactivate", productHandler.DeactivateProduct)   // Deactivate product
+	//	products.PATCH("/:id/discontinue", productHandler.DiscontinueProduct) // Discontinue product
+	//}
 
 	s.logRegisteredRoutes()
 }
