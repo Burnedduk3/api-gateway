@@ -9,25 +9,27 @@ import (
 )
 
 type MemoryRouteRepo struct {
-	routes map[string]*entities.Route
-	mu     sync.RWMutex
-	log    logger.Logger
+	backends map[string][]entities.Route
+	mu       sync.RWMutex
+	log      logger.Logger
 }
 
 func NewMemoryRouteRepo(log logger.Logger) *MemoryRouteRepo {
-	return &MemoryRouteRepo{log: log}
+	return &MemoryRouteRepo{
+		backends: make(map[string][]entities.Route),
+		log:      log,
+	}
 }
 
-func (repo *MemoryRouteRepo) GetAll(ctx context.Context) ([]*entities.Route, error) {
+func (repo *MemoryRouteRepo) GetAll(ctx context.Context) ([]entities.Route, error) {
 	repo.mu.RLock()
 	defer repo.mu.RUnlock()
-
-	routes := make([]*entities.Route, 0, len(repo.routes))
-	for _, route := range repo.routes {
-		routes = append(routes, route)
+	allRoutes := make([]entities.Route, 0, len(repo.backends))
+	for _, routes := range repo.backends {
+		allRoutes = append(allRoutes, routes...)
 	}
 
-	return routes, nil
+	return allRoutes, nil
 }
 
 func (repo *MemoryRouteRepo) Save(ctx context.Context, route *entities.Route) error {
@@ -42,7 +44,7 @@ func (repo *MemoryRouteRepo) Save(ctx context.Context, route *entities.Route) er
 		return errors.New("route ID is required")
 	}
 
-	repo.routes[route.ID] = route
+	repo.backends[route.Backend.Id] = append(repo.backends[route.Backend.Id], *route)
 
 	repo.log.Debug("Route saved", "id", route.ID, "path", route.Path, "method", route.Method)
 
@@ -52,17 +54,19 @@ func (repo *MemoryRouteRepo) Save(ctx context.Context, route *entities.Route) er
 func (repo *MemoryRouteRepo) FindByPathAndMethod(ctx context.Context, path, method string) (*entities.Route, error) {
 	repo.mu.RLock()
 	defer repo.mu.RUnlock()
-
 	// Loop through all stored routes
-	for _, route := range repo.routes {
-		if !route.IsEnabled() {
-			continue
+	for _, routes := range repo.backends {
+		for _, route := range routes {
+			if !route.IsEnabled() {
+				continue
+			}
+
+			// Use the route's Match method to check if it matches
+			if route.Match(path, method) {
+				return &route, nil
+			}
 		}
 
-		// Use the route's Match method to check if it matches
-		if route.Match(path, method) {
-			return route, nil
-		}
 	}
 
 	return nil, errors.New("route not found")

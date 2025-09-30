@@ -42,7 +42,7 @@ func (r *Route) Match(incomingPath string, incomingMethod string) bool {
 	}
 	switch r.PathType {
 	case PathTypeExact:
-		return incomingPath == r.Path
+		return incomingPath == (r.Backend.PathPrefix + r.Backend.Id + "/" + r.Path)
 	case PathTypePrefix:
 		return strings.HasPrefix(incomingPath, r.Path)
 	case PathTypeRegEx:

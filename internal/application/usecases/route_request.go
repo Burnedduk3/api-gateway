@@ -39,6 +39,20 @@ func (r routeRequestUseCaseImpl) GetRoute(ctx context.Context, req *dto.GatewayR
 }
 
 func (r routeRequestUseCaseImpl) Execute(ctx context.Context, req *dto.GatewayRequest) (*dto.GatewayResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	proxyRequest := dto.ProxyRequest{
+		Method:  req.Method,
+		Headers: req.Headers,
+		Body:    req.Body,
+		URL:     req.Host + req.Path,
+	}
+	res, err := r.proxyClient.Forward(ctx, &proxyRequest)
+	if err != nil {
+		return nil, err
+	}
+	gatewayResponse := dto.GatewayResponse{
+		StatusCode: res.StatusCode,
+		Headers:    res.Headers,
+		Body:       res.Body,
+	}
+	return &gatewayResponse, nil
 }

@@ -55,7 +55,7 @@ func ZapLogger(logger logger.Logger) echo.MiddlewareFunc {
 				logger.Error("HTTP request completed", fields...)
 			case status >= 400:
 				logger.Warn("HTTP request completed", fields...)
-			case status >= 300:
+			case status >= 200:
 				logger.Info("HTTP request completed", fields...)
 			default:
 				logger.Debug("HTTP request completed", fields...)

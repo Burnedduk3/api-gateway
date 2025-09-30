@@ -8,6 +8,7 @@ type GatewayRequest struct {
 	Headers     map[string][]string
 	Body        []byte
 	QueryParams url.Values
+	Host        string
 }
 
 type GatewayResponse struct {

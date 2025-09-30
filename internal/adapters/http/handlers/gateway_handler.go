@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
@@ -30,11 +29,6 @@ func NewGatewayHandler(log logger.Logger, routeUseCase usecases.RouteRequestUseC
 func (h *GatewayHandler) HandleRequest(c echo.Context) error {
 	h.log.Info(fmt.Sprintf("Incoming Headers: %v", c.Request().Header))
 	ctx := context.Background()
-	u := uuid.New()
-	c.Request().Header.Add("X-Request-ID", u.String())
-	h.log.Info(fmt.Sprintf("Added Header: %s", fmt.Sprintf("X-Request-ID:%s", u.String())))
-	h.log.Info(fmt.Sprintf("Added Headers: %v", c.Request().Header))
-	h.log.Info(fmt.Sprintf("X-Request-ID: %s", c.Request().Header.Get("X-Request-ID")))
 	var body []byte
 	c.Request().Body.Read(body)
 	gatewayRequestDto := dto.GatewayRequest{
@@ -51,6 +45,8 @@ func (h *GatewayHandler) HandleRequest(c echo.Context) error {
 		}
 		return err
 	}
+	gatewayRequestDto.Host = route.Backend.Host
+	gatewayRequestDto.Path = route.Backend.PathPrefix + route.Path
 	authRequest := dto.AuthRequest{
 		Headers: c.Request().Header,
 		Policy:  route.AuthPolicy,
@@ -67,8 +63,19 @@ func (h *GatewayHandler) HandleRequest(c echo.Context) error {
 			h.log.Error(fmt.Sprintf("Error executing route: %v", err))
 			return err
 		}
-		h.log.Info(fmt.Sprintf("Gateway Response: %v", gatewayResponse))
-		return c.JSON(gatewayResponse.StatusCode, gatewayResponse)
+		h.log.Debug(fmt.Sprintf("Gateway Response: %v", gatewayResponse))
+
+		for key, values := range gatewayResponse.Headers {
+			for _, value := range values {
+				c.Response().Header().Add(key, value)
+			}
+		}
+		
+		return c.Blob(
+			gatewayResponse.StatusCode,
+			c.Response().Header().Get("Content-Type"),
+			gatewayResponse.Body,
+		)
 	}
 	return c.JSON(http.StatusUnauthorized, domainErrors.NewValidationError("NOT_UNAUTHENTICATED", "No authenticated user"))
 }
