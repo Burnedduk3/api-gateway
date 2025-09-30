@@ -79,7 +79,8 @@ func TestRouteRequestUseCase_Execute_Success(t *testing.T) {
 
 	mockProxy.On("Forward", mock.Anything, expectedProxyReq).Return(proxyResponse, nil)
 
-	useCase := usecases.NewRouteRequestUseCase(mockProxy, mockRepo, log)
+	// Fixed: Added serverPathPrefix parameter and correct order
+	useCase := usecases.NewRouteRequestUseCase("/api", mockProxy, mockRepo, log)
 
 	response, err := useCase.Execute(context.Background(), request)
 
@@ -105,7 +106,8 @@ func TestRouteRequestUseCase_Execute_ProxyError(t *testing.T) {
 	mockProxy.On("Forward", mock.Anything, mock.Anything).
 		Return(nil, errors.New("connection timeout"))
 
-	useCase := usecases.NewRouteRequestUseCase(mockProxy, mockRepo, log)
+	// Fixed: Added serverPathPrefix parameter and correct order
+	useCase := usecases.NewRouteRequestUseCase("/api", mockProxy, mockRepo, log)
 
 	response, err := useCase.Execute(context.Background(), request)
 
@@ -114,4 +116,69 @@ func TestRouteRequestUseCase_Execute_ProxyError(t *testing.T) {
 	assert.Contains(t, err.Error(), "connection timeout")
 
 	mockProxy.AssertExpectations(t)
+}
+
+func TestRouteRequestUseCase_GetRoute_Success(t *testing.T) {
+	mockRepo := new(MockRouteRepository)
+	mockProxy := new(MockProxyClient)
+	log := logger.New("test")
+
+	backend := &entities.Backend{
+		Host:       "http://service:8080",
+		Id:         "user",
+		PathPrefix: "/api/v1",
+	}
+
+	expectedRoute := &entities.Route{
+		ID:       "user-list",
+		Path:     "/users",
+		Method:   "GET",
+		PathType: entities.PathTypeExact,
+		Enabled:  true,
+		Backend:  backend,
+	}
+
+	request := &dto.GatewayRequest{
+		Path:   "/api/user/users",
+		Method: "GET",
+	}
+
+	// After removing /api prefix, it becomes /user/users
+	mockRepo.On("FindByPathAndMethod", mock.Anything, "/user/users", "GET").
+		Return(expectedRoute, nil)
+
+	useCase := usecases.NewRouteRequestUseCase("/api", mockProxy, mockRepo, log)
+
+	route, err := useCase.GetRoute(context.Background(), request)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, route)
+	assert.Equal(t, "user-list", route.ID)
+	assert.Equal(t, "/users", route.Path)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestRouteRequestUseCase_GetRoute_NotFound(t *testing.T) {
+	mockRepo := new(MockRouteRepository)
+	mockProxy := new(MockProxyClient)
+	log := logger.New("test")
+
+	request := &dto.GatewayRequest{
+		Path:   "/api/user/notfound",
+		Method: "GET",
+	}
+
+	mockRepo.On("FindByPathAndMethod", mock.Anything, "/user/notfound", "GET").
+		Return(nil, errors.New("route not found"))
+
+	useCase := usecases.NewRouteRequestUseCase("/api", mockProxy, mockRepo, log)
+
+	route, err := useCase.GetRoute(context.Background(), request)
+
+	assert.Error(t, err)
+	assert.Nil(t, route)
+	assert.Contains(t, err.Error(), "route not found")
+
+	mockRepo.AssertExpectations(t)
 }

@@ -12,6 +12,7 @@ func TestRoute_Match(t *testing.T) {
 	tests := []struct {
 		name           string
 		route          *entities.Route
+		backendID      string
 		incomingPath   string
 		incomingMethod string
 		shouldMatch    bool
@@ -19,50 +20,168 @@ func TestRoute_Match(t *testing.T) {
 		{
 			name: "exact path match",
 			route: &entities.Route{
-				Path:   "user/api/users",
-				Method: "GET",
+				Path:     "/users",
+				Method:   "GET",
+				PathType: entities.PathTypeExact,
 				Backend: &entities.Backend{
 					Host: "http://service:8080",
 					Id:   "user",
 				},
 			},
-			incomingPath:   "api/users",
+			backendID:      "user",
+			incomingPath:   "user/users",
+			incomingMethod: "GET",
+			shouldMatch:    true,
+		},
+		{
+			name: "exact path match - health endpoint",
+			route: &entities.Route{
+				Path:     "/health",
+				Method:   "GET",
+				PathType: entities.PathTypeExact,
+				Backend: &entities.Backend{
+					Host: "http://service:8080",
+					Id:   "user",
+				},
+			},
+			backendID:      "user",
+			incomingPath:   "user/health",
 			incomingMethod: "GET",
 			shouldMatch:    true,
 		},
 		{
 			name: "method mismatch",
 			route: &entities.Route{
-				Path:   "user/api/users",
-				Method: "POST",
+				Path:     "/users",
+				Method:   "POST",
+				PathType: entities.PathTypeExact,
 				Backend: &entities.Backend{
 					Host: "http://service:8080",
 					Id:   "user",
 				},
 			},
-			incomingPath:   "user/api/users",
+			backendID:      "user",
+			incomingPath:   "user/users",
 			incomingMethod: "GET",
 			shouldMatch:    false,
 		},
 		{
 			name: "wildcard method match",
 			route: &entities.Route{
-				Path:   "user/api/health",
-				Method: "*",
+				Path:     "/health",
+				Method:   "*",
+				PathType: entities.PathTypeExact,
 				Backend: &entities.Backend{
 					Host: "http://service:8080",
 					Id:   "user",
 				},
 			},
-			incomingPath:   "user/api/health",
+			backendID:      "user",
+			incomingPath:   "user/health",
 			incomingMethod: "GET",
 			shouldMatch:    true,
+		},
+		{
+			name: "prefix match with parameter - user by id",
+			route: &entities.Route{
+				Path:     "/users/:id",
+				Method:   "GET",
+				PathType: entities.PathTypePrefix,
+				Backend: &entities.Backend{
+					Host: "http://service:8080",
+					Id:   "user",
+				},
+			},
+			backendID:      "user",
+			incomingPath:   "user/users/123",
+			incomingMethod: "GET",
+			shouldMatch:    true,
+		},
+		{
+			name: "prefix match with parameter - user by email",
+			route: &entities.Route{
+				Path:     "/users/email/:email",
+				Method:   "GET",
+				PathType: entities.PathTypePrefix,
+				Backend: &entities.Backend{
+					Host: "http://service:8080",
+					Id:   "user",
+				},
+			},
+			backendID:      "user",
+			incomingPath:   "user/users/email/test@example.com",
+			incomingMethod: "GET",
+			shouldMatch:    true,
+		},
+		{
+			name: "prefix match with parameter - orders by id",
+			route: &entities.Route{
+				Path:     "/orders/:id",
+				Method:   "GET",
+				PathType: entities.PathTypePrefix,
+				Backend: &entities.Backend{
+					Host: "http://service:8080",
+					Id:   "orders",
+				},
+			},
+			backendID:      "orders",
+			incomingPath:   "orders/orders/456",
+			incomingMethod: "GET",
+			shouldMatch:    true,
+		},
+		{
+			name: "parameter segment count mismatch",
+			route: &entities.Route{
+				Path:     "/users/:id",
+				Method:   "GET",
+				PathType: entities.PathTypePrefix,
+				Backend: &entities.Backend{
+					Host: "http://service:8080",
+					Id:   "user",
+				},
+			},
+			backendID:      "user",
+			incomingPath:   "user/users",
+			incomingMethod: "GET",
+			shouldMatch:    false,
+		},
+		{
+			name: "parameter segment count mismatch - extra segments",
+			route: &entities.Route{
+				Path:     "/users/:id",
+				Method:   "GET",
+				PathType: entities.PathTypePrefix,
+				Backend: &entities.Backend{
+					Host: "http://service:8080",
+					Id:   "user",
+				},
+			},
+			backendID:      "user",
+			incomingPath:   "user/users/123/extra",
+			incomingMethod: "GET",
+			shouldMatch:    false,
+		},
+		{
+			name: "exact path no match",
+			route: &entities.Route{
+				Path:     "/users",
+				Method:   "GET",
+				PathType: entities.PathTypeExact,
+				Backend: &entities.Backend{
+					Host: "http://service:8080",
+					Id:   "user",
+				},
+			},
+			backendID:      "user",
+			incomingPath:   "user/users/123",
+			incomingMethod: "GET",
+			shouldMatch:    false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := tt.route.Match(tt.incomingPath, tt.incomingMethod)
+			result := tt.route.Match(tt.incomingPath, tt.incomingMethod, tt.backendID)
 			assert.Equal(t, tt.shouldMatch, result)
 		})
 	}
@@ -100,6 +219,7 @@ func TestRoute_IsEnabled(t *testing.T) {
 func TestRoute_GetBackend(t *testing.T) {
 	backend := &entities.Backend{
 		Host: "http://service-a:8080",
+		Id:   "service-a",
 	}
 
 	route := &entities.Route{
@@ -121,7 +241,7 @@ func TestRoute_Validate(t *testing.T) {
 				ID:      "route-1",
 				Path:    "/api/users",
 				Method:  "GET",
-				Backend: &entities.Backend{Host: "http://service:8080"},
+				Backend: &entities.Backend{Host: "http://service:8080", Id: "user"},
 				Enabled: true,
 			},
 			wantErr: false,
@@ -131,7 +251,7 @@ func TestRoute_Validate(t *testing.T) {
 			route: &entities.Route{
 				ID:      "route-1",
 				Method:  "GET",
-				Backend: &entities.Backend{Host: "http://service:8080"},
+				Backend: &entities.Backend{Host: "http://service:8080", Id: "user"},
 			},
 			wantErr: true,
 		},
@@ -140,7 +260,7 @@ func TestRoute_Validate(t *testing.T) {
 			route: &entities.Route{
 				ID:      "route-1",
 				Path:    "/api/users",
-				Backend: &entities.Backend{Host: "http://service:8080"},
+				Backend: &entities.Backend{Host: "http://service:8080", Id: "user"},
 			},
 			wantErr: true,
 		},

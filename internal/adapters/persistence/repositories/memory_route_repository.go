@@ -24,6 +24,7 @@ func NewMemoryRouteRepo(log logger.Logger) *MemoryRouteRepo {
 func (repo *MemoryRouteRepo) GetAll(ctx context.Context) ([]entities.Route, error) {
 	repo.mu.RLock()
 	defer repo.mu.RUnlock()
+
 	allRoutes := make([]entities.Route, 0, len(repo.backends))
 	for _, routes := range repo.backends {
 		allRoutes = append(allRoutes, routes...)
@@ -44,9 +45,19 @@ func (repo *MemoryRouteRepo) Save(ctx context.Context, route *entities.Route) er
 		return errors.New("route ID is required")
 	}
 
-	repo.backends[route.Backend.Id] = append(repo.backends[route.Backend.Id], *route)
+	if route.Backend == nil {
+		return errors.New("route backend is required")
+	}
 
-	repo.log.Debug("Route saved", "id", route.ID, "path", route.Path, "method", route.Method)
+	backendID := route.Backend.Id
+	repo.backends[backendID] = append(repo.backends[backendID], *route)
+
+	repo.log.Debug("Route saved",
+		"id", route.ID,
+		"path", route.Path,
+		"method", route.Method,
+		"backend_id", backendID,
+	)
 
 	return nil
 }
@@ -54,20 +65,46 @@ func (repo *MemoryRouteRepo) Save(ctx context.Context, route *entities.Route) er
 func (repo *MemoryRouteRepo) FindByPathAndMethod(ctx context.Context, path, method string) (*entities.Route, error) {
 	repo.mu.RLock()
 	defer repo.mu.RUnlock()
-	// Loop through all stored routes
-	for _, routes := range repo.backends {
-		for _, route := range routes {
-			if !route.IsEnabled() {
-				continue
-			}
 
-			// Use the route's Match method to check if it matches
-			if route.Match(path, method) {
-				return &route, nil
+	repo.log.Debug("Looking for route",
+		"path", path,
+		"method", method,
+		"backends_count", len(repo.backends),
+	)
+
+	// Iterate over backend IDs and their routes
+	for backendID, routes := range repo.backends {
+		repo.log.Debug("Checking backend",
+			"backend_id", backendID,
+			"routes_count", len(routes),
+		)
+
+		for i := range routes {
+			route := &routes[i]
+
+			repo.log.Debug("Checking route",
+				"route_id", route.ID,
+				"route_path", route.Path,
+				"route_method", route.Method,
+				"route_enabled", route.Enabled,
+			)
+
+			// Pass backend ID to match
+			if route.Match(path, method, backendID) && route.IsEnabled() {
+				repo.log.Info("Route matched",
+					"route_id", route.ID,
+					"route_path", route.Path,
+					"backend_id", backendID,
+				)
+				return route, nil
 			}
 		}
-
 	}
+
+	repo.log.Warn("No route found",
+		"path", path,
+		"method", method,
+	)
 
 	return nil, errors.New("route not found")
 }

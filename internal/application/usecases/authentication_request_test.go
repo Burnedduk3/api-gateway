@@ -25,7 +25,7 @@ func (m *MockAuthValidator) Validate(ctx context.Context, token string, policy *
 }
 
 func (m *MockAuthValidator) ExtractToken(ctx context.Context, headers map[string][]string, authType string) (string, error) {
-	args := m.Called(headers, authType)
+	args := m.Called(ctx, headers, authType)
 	return args.String(0), args.Error(1)
 }
 
@@ -45,7 +45,8 @@ func TestAuthenticateRequestUseCase_Execute_Success(t *testing.T) {
 		Policy: authPolicy,
 	}
 
-	mockValidator.On("ExtractToken", request.Headers, entities.AuthTypeAPIKey).
+	// Fixed: Added ctx parameter
+	mockValidator.On("ExtractToken", mock.Anything, request.Headers, entities.AuthTypeAPIKey).
 		Return("key123", nil)
 	mockValidator.On("Validate", mock.Anything, "key123", authPolicy).
 		Return(nil)
@@ -102,7 +103,8 @@ func TestAuthenticateRequestUseCase_Execute_MissingToken(t *testing.T) {
 		Policy:  authPolicy,
 	}
 
-	mockValidator.On("ExtractToken", request.Headers, entities.AuthTypeAPIKey).
+	// Fixed: Added ctx parameter
+	mockValidator.On("ExtractToken", mock.Anything, request.Headers, entities.AuthTypeAPIKey).
 		Return("", errors.New("missing auth token"))
 
 	useCase := usecases.NewAuthenticateRequestUseCase(mockValidator, log)
@@ -134,4 +136,36 @@ func TestAuthenticateRequestUseCase_Execute_NilPolicy(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.True(t, result.Authenticated)
+}
+
+func TestAuthenticateRequestUseCase_Execute_InvalidToken(t *testing.T) {
+	mockValidator := new(MockAuthValidator)
+	log := logger.New("test")
+
+	authPolicy := &entities.AuthPolicy{
+		Type:    entities.AuthTypeAPIKey,
+		Enabled: true,
+	}
+
+	request := &dto.AuthRequest{
+		Headers: map[string][]string{
+			"X-API-Key": {"invalid-key"},
+		},
+		Policy: authPolicy,
+	}
+
+	mockValidator.On("ExtractToken", mock.Anything, request.Headers, entities.AuthTypeAPIKey).
+		Return("invalid-key", nil)
+	mockValidator.On("Validate", mock.Anything, "invalid-key", authPolicy).
+		Return(errors.New("invalid token"))
+
+	useCase := usecases.NewAuthenticateRequestUseCase(mockValidator, log)
+
+	result, err := useCase.Execute(context.Background(), request)
+
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "invalid token")
+
+	mockValidator.AssertExpectations(t)
 }

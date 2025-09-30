@@ -20,7 +20,7 @@ redis:
 
 backends:
   # User Service
-  - host: "http://users-service:8000"
+  - host: "http://192.168.2.13:8000"
     id: "user"
     path_prefix: "/api/v1"
     routes:
@@ -99,7 +99,7 @@ backends:
           enabled: "true"
 
   # Orders Service
-  - host: "http://orders-service:8100"
+  - host: "http://192.168.2.13:8100"
     id: "orders"
     path_prefix: "/api/v1"
     routes:
@@ -252,7 +252,7 @@ backends:
           type: "api"
           enabled: "true"
 
-  - host: "http://product-service:8200"
+  - host: "http://192.168.2.13:8200"
     id: "product"
     path_prefix: "/api/v1"
     routes:

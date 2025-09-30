@@ -35,23 +35,61 @@ func NewRoute(method, path, pathType string, enabled bool, backend *Backend, aut
 	}
 }
 
-func (r *Route) Match(incomingPath string, incomingMethod string) bool {
-	if r.Method != incomingMethod && r.Method != "*" {
+// Match checks if the route matches the incoming request
+// backendID is prepended to the route path before matching
+func (r *Route) Match(incomingPath, incomingMethod, backendID string) bool {
+	// Check method match first (including wildcard)
+	if r.Method != "*" && r.Method != incomingMethod {
 		return false
 	}
-	pathWithoutPathPrefix := strings.Trim(strings.TrimPrefix(incomingPath, r.Backend.PathPrefix), "/")
-	service := strings.Split(pathWithoutPathPrefix, "/")[0]
-	if strings.ToLower(service) == strings.ToLower(r.Backend.Id) {
-		path := strings.TrimPrefix(pathWithoutPathPrefix, r.Backend.Id)
-		path = strings.Trim(path, "/")
-		switch r.PathType {
-		case PathTypeExact:
-			return path == strings.Trim(r.Path, "/")
-		default:
-			return r.Path == incomingPath
+
+	// Prepend backend ID to route path
+	fullPath := "/" + backendID + r.Path
+
+	switch r.PathType {
+	case "exact":
+		return fullPath == incomingPath
+
+	case "prefix":
+		// First try parameterized matching if path contains ":"
+		if strings.Contains(fullPath, ":") {
+			return r.matchParameterizedPath(incomingPath, fullPath)
+		}
+		// Otherwise do simple prefix matching
+		return strings.HasPrefix(incomingPath, fullPath)
+
+	default:
+		// Default to exact match
+		return fullPath == incomingPath
+	}
+}
+
+// matchParameterizedPath handles paths with parameters like /users/:id
+func (r *Route) matchParameterizedPath(incomingPath, fullPath string) bool {
+	routeParts := strings.Split(fullPath, "/")
+	pathParts := strings.Split(incomingPath, "/")
+
+	// Must have same number of segments
+	if len(routeParts) != len(pathParts) {
+		return false
+	}
+
+	for i := 0; i < len(routeParts); i++ {
+		routePart := routeParts[i]
+		pathPart := pathParts[i]
+
+		// If it's a parameter (starts with :), it matches anything
+		if strings.HasPrefix(routePart, ":") {
+			continue
+		}
+
+		// Otherwise must match exactly
+		if routePart != pathPart {
+			return false
 		}
 	}
-	return false
+
+	return true
 }
 
 func (r *Route) IsEnabled() bool {

@@ -16,6 +16,6 @@ WORKDIR /app
 
 COPY --from=build /build/api-gateway /app
 
-COPY configs/config-docker.yaml /etc/api-gateway/config.yaml
+COPY configs/config.yaml /etc/api-gateway/config.yaml
 
 ENTRYPOINT ["/app/api-gateway", "server"]

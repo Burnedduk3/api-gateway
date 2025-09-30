@@ -1,4 +1,3 @@
-# configs/config.yaml
 environment: development
 
 version: 1.0.0
@@ -19,12 +18,10 @@ redis:
   database: 0
 
 backends:
-  # User Service
   - host: "http://localhost:8000"
     id: "user"
     path_prefix: "/api/v1"
     routes:
-      # Health endpoints
       - id: "user-health"
         method: "GET"
         path: "/health"
@@ -61,7 +58,6 @@ backends:
           type: "none"
           enabled: "true"
 
-      # User endpoints
       - id: "user-create"
         method: "POST"
         path: "/users"
@@ -80,30 +76,28 @@ backends:
           type: "api"
           enabled: "true"
 
-      - id: "user-get-by-id"
-        method: "GET"
-        path: "/users/"
-        path_type: "prefix"
-        enabled: "true"
-        auth_policy:
-          type: "api"
-          enabled: "true"
-
       - id: "user-get-by-email"
         method: "GET"
-        path: "/users/email/"
+        path: "/users/email/:email"
         path_type: "prefix"
         enabled: "true"
         auth_policy:
           type: "api"
           enabled: "true"
 
-  # Orders Service
+      - id: "user-get-by-id"
+        method: "GET"
+        path: "/users/:id"
+        path_type: "prefix"
+        enabled: "true"
+        auth_policy:
+          type: "api"
+          enabled: "true"
+
   - host: "http://localhost:8100"
     id: "orders"
     path_prefix: "/api/v1"
     routes:
-      # Health endpoints
       - id: "orders-health"
         method: "GET"
         path: "/health"
@@ -140,7 +134,6 @@ backends:
           type: "none"
           enabled: "true"
 
-      # Order CRUD endpoints
       - id: "orders-create"
         method: "POST"
         path: "/orders"
@@ -159,37 +152,18 @@ backends:
           type: "api"
           enabled: "true"
 
-      - id: "orders-get-by-id"
+      - id: "orders-by-customer"
         method: "GET"
-        path: "/orders/"
+        path: "/customers/:customer_id/orders"
         path_type: "prefix"
         enabled: "true"
         auth_policy:
           type: "api"
           enabled: "true"
 
-      - id: "orders-delete"
-        method: "DELETE"
-        path: "/orders/"
-        path_type: "prefix"
-        enabled: "true"
-        auth_policy:
-          type: "api"
-          enabled: "true"
-
-      # Order status endpoints
       - id: "orders-get-by-status"
         method: "GET"
-        path: "/orders/status/"
-        path_type: "prefix"
-        enabled: "true"
-        auth_policy:
-          type: "api"
-          enabled: "true"
-
-      - id: "orders-update-status"
-        method: "PUT"
-        path: "/orders/"
+        path: "/orders/status/:status"
         path_type: "prefix"
         enabled: "true"
         auth_policy:
@@ -198,7 +172,7 @@ backends:
 
       - id: "orders-confirm"
         method: "POST"
-        path: "/orders/"
+        path: "/orders/:id/confirm"
         path_type: "prefix"
         enabled: "true"
         auth_policy:
@@ -207,17 +181,16 @@ backends:
 
       - id: "orders-cancel"
         method: "POST"
-        path: "/orders/"
+        path: "/orders/:id/cancel"
         path_type: "prefix"
         enabled: "true"
         auth_policy:
           type: "api"
           enabled: "true"
 
-      # Order items endpoints
       - id: "orders-add-item"
         method: "POST"
-        path: "/orders/"
+        path: "/orders/:id/items"
         path_type: "prefix"
         enabled: "true"
         auth_policy:
@@ -226,7 +199,7 @@ backends:
 
       - id: "orders-update-item"
         method: "PUT"
-        path: "/orders/"
+        path: "/orders/:id/items/:product_id"
         path_type: "prefix"
         enabled: "true"
         auth_policy:
@@ -235,17 +208,34 @@ backends:
 
       - id: "orders-remove-item"
         method: "DELETE"
-        path: "/orders/"
+        path: "/orders/:id/items/:product_id"
         path_type: "prefix"
         enabled: "true"
         auth_policy:
           type: "api"
           enabled: "true"
 
-      # Customer orders endpoint
-      - id: "orders-by-customer"
+      - id: "orders-update-status"
+        method: "PUT"
+        path: "/orders/:id/status"
+        path_type: "prefix"
+        enabled: "true"
+        auth_policy:
+          type: "api"
+          enabled: "true"
+
+      - id: "orders-get-by-id"
         method: "GET"
-        path: "/customers/"
+        path: "/orders/:id"
+        path_type: "prefix"
+        enabled: "true"
+        auth_policy:
+          type: "api"
+          enabled: "true"
+
+      - id: "orders-delete"
+        method: "DELETE"
+        path: "/orders/:id"
         path_type: "prefix"
         enabled: "true"
         auth_policy:
@@ -256,7 +246,6 @@ backends:
     id: "product"
     path_prefix: "/api/v1"
     routes:
-      # Health endpoints
       - id: "product-health"
         method: "GET"
         path: "/health"
@@ -293,7 +282,6 @@ backends:
           type: "none"
           enabled: "true"
 
-      # Product CRUD endpoints
       - id: "product-create"
         method: "POST"
         path: "/products"
@@ -312,37 +300,18 @@ backends:
           type: "none"
           enabled: "true"
 
-      - id: "product-get-by-id"
-        method: "GET"
-        path: "/products/"
-        path_type: "prefix"
-        enabled: "true"
-        auth_policy:
-          type: "none"
-          enabled: "true"
-
       - id: "product-get-by-sku"
         method: "GET"
-        path: "/products/sku/"
+        path: "/products/sku/:sku"
         path_type: "prefix"
         enabled: "true"
         auth_policy:
           type: "none"
           enabled: "true"
 
-      - id: "product-update"
-        method: "PUT"
-        path: "/products/"
-        path_type: "prefix"
-        enabled: "true"
-        auth_policy:
-          type: "api"
-          enabled: "true"
-
-      # Product management endpoints
       - id: "product-update-stock"
         method: "PATCH"
-        path: "/products/"
+        path: "/products/:id/stock"
         path_type: "prefix"
         enabled: "true"
         auth_policy:
@@ -351,7 +320,7 @@ backends:
 
       - id: "product-update-price"
         method: "PATCH"
-        path: "/products/"
+        path: "/products/:id/price"
         path_type: "prefix"
         enabled: "true"
         auth_policy:
@@ -360,7 +329,7 @@ backends:
 
       - id: "product-activate"
         method: "PATCH"
-        path: "/products/"
+        path: "/products/:id/activate"
         path_type: "prefix"
         enabled: "true"
         auth_policy:
@@ -369,7 +338,7 @@ backends:
 
       - id: "product-deactivate"
         method: "PATCH"
-        path: "/products/"
+        path: "/products/:id/deactivate"
         path_type: "prefix"
         enabled: "true"
         auth_policy:
@@ -378,13 +347,30 @@ backends:
 
       - id: "product-discontinue"
         method: "PATCH"
-        path: "/products/"
+        path: "/products/:id/discontinue"
         path_type: "prefix"
         enabled: "true"
         auth_policy:
           type: "api"
           enabled: "true"
 
+      - id: "product-get-by-id"
+        method: "GET"
+        path: "/products/:id"
+        path_type: "prefix"
+        enabled: "true"
+        auth_policy:
+          type: "none"
+          enabled: "true"
+
+      - id: "product-update"
+        method: "PUT"
+        path: "/products/:id"
+        path_type: "prefix"
+        enabled: "true"
+        auth_policy:
+          type: "api"
+          enabled: "true"
 
 security:
   rate_limit_rps: 100
