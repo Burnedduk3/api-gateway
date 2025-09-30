@@ -1,7 +1,7 @@
 FROM alpine:3.22
 
 RUN mkdir -p /etc/api-gateway
-COPY configs/api-gateway-config.yaml /etc/api-gateway/config.yaml
+COPY configs/config.yaml /etc/api-gateway/config.yaml
 
 RUN adduser -u 2000 -S api-gateway && \
     chown -R api-gateway /etc/api-gateway
