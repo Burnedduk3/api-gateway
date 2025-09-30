@@ -80,9 +80,10 @@ services:
     container_name: api-gateway-service
     ports:
       - "8300:8300"
-    build:
-      context: ../
-      dockerfile: docker/dev.Dockerfile
+#    build:
+#      context: ../
+#      dockerfile: docker/dev.Dockerfile
+    image:  049139783164.dkr.ecr.us-east-1.amazonaws.com/develop/api-gateway:1.0.10
     volumes:
       - ./configs/api-gateway-config.yaml:/etc/api-gateway/config.yaml
     depends_on:
