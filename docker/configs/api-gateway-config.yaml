@@ -13,14 +13,14 @@ server:
     allow_origins: ["*"]
 
 redis:
-  host: "localhost"
+  host: "redis"
   port: "6379"
   password: ""
   database: 0
 
 backends:
   # User Service
-  - host: "http://localhost:8000"
+  - host: "http://users-service:8000"
     id: "user"
     path_prefix: "/api/v1"
     routes:
@@ -99,7 +99,7 @@ backends:
           enabled: "true"
 
   # Orders Service
-  - host: "http://localhost:8100"
+  - host: "http://orders-service:8100"
     id: "orders"
     path_prefix: "/api/v1"
     routes:
@@ -252,7 +252,7 @@ backends:
           type: "api"
           enabled: "true"
 
-  - host: "http://localhost:8200"
+  - host: "http://product-service:8200"
     id: "product"
     path_prefix: "/api/v1"
     routes:

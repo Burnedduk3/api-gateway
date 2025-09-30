@@ -2,7 +2,6 @@ package entities
 
 import (
 	domainErrors "api-gateway/internal/domain/errors"
-	"regexp"
 	"strings"
 )
 
@@ -40,20 +39,19 @@ func (r *Route) Match(incomingPath string, incomingMethod string) bool {
 	if r.Method != incomingMethod && r.Method != "*" {
 		return false
 	}
-	switch r.PathType {
-	case PathTypeExact:
-		return incomingPath == (r.Backend.PathPrefix + r.Backend.Id + "/" + r.Path)
-	case PathTypePrefix:
-		return strings.HasPrefix(incomingPath, r.Path)
-	case PathTypeRegEx:
-		compiledRegex, err := regexp.Compile(r.Path)
-		if err != nil {
-			return false
+	pathWithoutPathPrefix := strings.Trim(strings.TrimPrefix(incomingPath, r.Backend.PathPrefix), "/")
+	service := strings.Split(pathWithoutPathPrefix, "/")[0]
+	if strings.ToLower(service) == strings.ToLower(r.Backend.Id) {
+		path := strings.TrimPrefix(pathWithoutPathPrefix, r.Backend.Id)
+		path = strings.Trim(path, "/")
+		switch r.PathType {
+		case PathTypeExact:
+			return path == strings.Trim(r.Path, "/")
+		default:
+			return r.Path == incomingPath
 		}
-		return compiledRegex.MatchString(incomingPath)
-	default:
-		return r.Path == incomingPath
 	}
+	return false
 }
 
 func (r *Route) IsEnabled() bool {

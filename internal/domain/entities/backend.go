@@ -3,14 +3,12 @@ package entities
 import (
 	domainErrors "api-gateway/internal/domain/errors"
 	"net/url"
-	"strings"
 	"time"
 )
 
 type Backend struct {
 	Id              string
 	Host            string
-	StripPrefix     string
 	PathPrefix      string
 	LastHealthCheck time.Time
 	Timeout         time.Duration
@@ -18,9 +16,7 @@ type Backend struct {
 }
 
 func (b *Backend) GetURL(requestPath string) string {
-	backendUrl := b.Host + b.PathPrefix
-	backendUrl += strings.TrimPrefix(requestPath, b.StripPrefix)
-	return backendUrl
+	return b.Host + b.PathPrefix + requestPath
 }
 
 func (b *Backend) IsHealthy() bool {

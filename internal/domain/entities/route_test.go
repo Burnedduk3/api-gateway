@@ -19,52 +19,42 @@ func TestRoute_Match(t *testing.T) {
 		{
 			name: "exact path match",
 			route: &entities.Route{
-				Path:   "/api/users",
+				Path:   "user/api/users",
 				Method: "GET",
+				Backend: &entities.Backend{
+					Host: "http://service:8080",
+					Id:   "user",
+				},
 			},
-			incomingPath:   "/api/users",
-			incomingMethod: "GET",
-			shouldMatch:    true,
-		},
-		{
-			name: "path prefix match",
-			route: &entities.Route{
-				Path:     "/api/users",
-				Method:   "GET",
-				PathType: entities.PathTypePrefix,
-			},
-			incomingPath:   "/api/users/123",
-			incomingMethod: "GET",
-			shouldMatch:    true,
-		},
-		{
-			name: "regex pattern match",
-			route: &entities.Route{
-				Path:     "/api/users/[0-9]+",
-				Method:   "GET",
-				PathType: entities.PathTypeRegEx,
-			},
-			incomingPath:   "/api/users/123",
+			incomingPath:   "api/users",
 			incomingMethod: "GET",
 			shouldMatch:    true,
 		},
 		{
 			name: "method mismatch",
 			route: &entities.Route{
-				Path:   "/api/users",
+				Path:   "user/api/users",
 				Method: "POST",
+				Backend: &entities.Backend{
+					Host: "http://service:8080",
+					Id:   "user",
+				},
 			},
-			incomingPath:   "/api/users",
+			incomingPath:   "user/api/users",
 			incomingMethod: "GET",
 			shouldMatch:    false,
 		},
 		{
 			name: "wildcard method match",
 			route: &entities.Route{
-				Path:   "/api/health",
+				Path:   "user/api/health",
 				Method: "*",
+				Backend: &entities.Backend{
+					Host: "http://service:8080",
+					Id:   "user",
+				},
 			},
-			incomingPath:   "/api/health",
+			incomingPath:   "user/api/health",
 			incomingMethod: "GET",
 			shouldMatch:    true,
 		},

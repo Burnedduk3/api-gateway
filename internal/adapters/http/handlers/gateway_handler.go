@@ -54,7 +54,7 @@ func (h *GatewayHandler) HandleRequest(c echo.Context) error {
 	authResponse, err := h.authUseCase.Execute(ctx, &authRequest)
 	if err != nil {
 		h.log.Error(fmt.Sprintf("Error executing auth: %v", err))
-		return err
+		return c.JSON(http.StatusUnauthorized, domainErrors.NewValidationError("API_TOKEN_NOT_VALID", err.Error()))
 	}
 	h.log.Info(fmt.Sprintf("Auth Response: %v", authResponse))
 	if authResponse.Authenticated {
@@ -70,7 +70,7 @@ func (h *GatewayHandler) HandleRequest(c echo.Context) error {
 				c.Response().Header().Add(key, value)
 			}
 		}
-		
+
 		return c.Blob(
 			gatewayResponse.StatusCode,
 			c.Response().Header().Get("Content-Type"),

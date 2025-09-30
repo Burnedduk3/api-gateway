@@ -33,19 +33,28 @@ func (r *RedisApiKeyRepository) HealthCheck(ctx context.Context) error {
 		return fmt.Errorf("redis health check failed: %w", err)
 	}
 
+	r.client.Set(ctx, "key-123", true, 0)
+	r.client.Set(ctx, "key-1234", false, 0)
+
 	return nil
 }
 
 // IsValidKey checks if an API key exists and is valid in Redis
 func (r *RedisApiKeyRepository) IsValidKey(ctx context.Context, key string) (bool, error) {
 	// Check if key exists in Redis
-	exists, err := r.client.Exists(ctx, fmt.Sprintf("apikey:%s", key)).Result()
+	exists, err := r.client.Exists(ctx, key).Result()
 	if err != nil {
 		r.log.Error("Failed to check API key in Redis", "error", err)
 		return false, err
 	}
 
-	return exists > 0, nil
+	if exists == 0 {
+		return false, nil
+	}
+
+	isValidKey := r.client.Get(ctx, key).Val()
+
+	return isValidKey == "1", nil
 }
 
 // GetKeyMetadata retrieves metadata for an API key

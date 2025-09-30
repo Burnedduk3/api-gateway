@@ -6,6 +6,7 @@ import (
 	"api-gateway/internal/domain/entities"
 	"api-gateway/pkg/logger"
 	"context"
+	"strings"
 )
 
 // RouteRequestUseCases defines the interface for route operations
@@ -16,22 +17,25 @@ type RouteRequestUseCases interface {
 
 // RouteRequestUseCase implements RouteUseCases interface
 type routeRequestUseCaseImpl struct {
-	logger      logger.Logger
-	routeRepo   ports.RouteRepository
-	proxyClient ports.ProxyClient
+	serverPathPrefix string
+	logger           logger.Logger
+	routeRepo        ports.RouteRepository
+	proxyClient      ports.ProxyClient
 }
 
 // NewRouteRequestUseCase creates a new instance of route request use case
-func NewRouteRequestUseCase(proxyClient ports.ProxyClient, routeRepo ports.RouteRepository, log logger.Logger) RouteRequestUseCases {
+func NewRouteRequestUseCase(serverPathPrefix string, proxyClient ports.ProxyClient, routeRepo ports.RouteRepository, log logger.Logger) RouteRequestUseCases {
 	return &routeRequestUseCaseImpl{
-		routeRepo:   routeRepo,
-		proxyClient: proxyClient,
-		logger:      log.With("component", "routeRequest_usecases"),
+		serverPathPrefix: serverPathPrefix,
+		routeRepo:        routeRepo,
+		proxyClient:      proxyClient,
+		logger:           log.With("component", "routeRequest_usecases"),
 	}
 }
 
 func (r routeRequestUseCaseImpl) GetRoute(ctx context.Context, req *dto.GatewayRequest) (*entities.Route, error) {
-	route, err := r.routeRepo.FindByPathAndMethod(ctx, req.Path, req.Method)
+	cleanPath := strings.TrimPrefix(req.Path, r.serverPathPrefix)
+	route, err := r.routeRepo.FindByPathAndMethod(ctx, cleanPath, req.Method)
 	if err != nil {
 		return nil, err
 	}
@@ -47,6 +51,7 @@ func (r routeRequestUseCaseImpl) Execute(ctx context.Context, req *dto.GatewayRe
 	}
 	res, err := r.proxyClient.Forward(ctx, &proxyRequest)
 	if err != nil {
+		r.logger.Error(err.Error())
 		return nil, err
 	}
 	gatewayResponse := dto.GatewayResponse{

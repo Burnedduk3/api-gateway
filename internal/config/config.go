@@ -36,6 +36,7 @@ type RedisConfig struct {
 type ServerConfig struct {
 	Port            string        `mapstructure:"port"`
 	Host            string        `mapstructure:"host"`
+	PathPrefix      string        `mapstructure:"path_prefix"`
 	ReadTimeout     time.Duration `mapstructure:"read_timeout"`
 	WriteTimeout    time.Duration `mapstructure:"write_timeout"`
 	ShutdownTimeout time.Duration `mapstructure:"shutdown_timeout"`
@@ -67,11 +68,10 @@ type RouteConfig struct {
 }
 
 type BackendServiceConfig struct {
-	Host        string        `mapstructure:"host"`
-	ID          string        `mapstructure:"id"`
-	StripPrefix string        `mapstructure:"strip_prefix, omitempty"`
-	PathPrefix  string        `mapstructure:"path_prefix, omitempty"`
-	Routes      []RouteConfig `mapstructure:"routes"`
+	Host       string        `mapstructure:"host"`
+	ID         string        `mapstructure:"id"`
+	PathPrefix string        `mapstructure:"path_prefix, omitempty"`
+	Routes     []RouteConfig `mapstructure:"routes"`
 }
 
 func Load(configFile, env string) (*Config, error) {

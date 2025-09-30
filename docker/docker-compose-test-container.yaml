@@ -1,0 +1,90 @@
+version: '3.8'
+name: api-gateway-backend-container-test
+services:
+  postgres:
+    image: "postgres:17.6"
+    container_name: postgres
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: postgres
+    volumes:
+      - ./scripts/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+    ports:
+      - "5432:5432"
+  user-service-migration:
+    container_name: user-service-migration
+    image: 049139783164.dkr.ecr.us-east-1.amazonaws.com/develop/user-service:1.0.13
+    volumes:
+      - ./configs/user-config.yaml:/etc/user-service/config.yaml
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint: [ "/app/user-service", "migration" ]
+    restart: "no"
+  user-service:
+    container_name: user-service
+    image: 049139783164.dkr.ecr.us-east-1.amazonaws.com/develop/user-service:1.0.13
+    volumes:
+      - ./configs/user-config.yaml:/etc/user-service/config.yaml
+    ports:
+      - "8000:8000"
+    depends_on: [user-service-migration]
+  orders-service-migration:
+    container_name: orders-service-migration
+    image: 049139783164.dkr.ecr.us-east-1.amazonaws.com/develop/orders-service:1.0.7
+    volumes:
+      - ./configs/orders-config.yaml:/etc/orders-service/config.yaml
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint: [ "/app/orders-service", "migration" ]
+    restart: "no"
+  orders-service:
+    container_name: orders-service
+    image: 049139783164.dkr.ecr.us-east-1.amazonaws.com/develop/orders-service:1.0.7
+    volumes:
+      - ./configs/orders-config.yaml:/etc/orders-service/config.yaml
+    ports:
+      - "8100:8100"
+    depends_on: [orders-service-migration]
+  product-service-migration:
+    container_name: product-service-migration
+    image: 049139783164.dkr.ecr.us-east-1.amazonaws.com/develop/product-service:1.0.14
+    volumes:
+      - ./configs/product-config.yaml:/etc/product-service/config.yaml
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint: [ "/app/product-service", "migration" ]
+    restart: "no"
+  product-service:
+    container_name: product-service
+    image: 049139783164.dkr.ecr.us-east-1.amazonaws.com/develop/product-service:1.0.14
+    volumes:
+      - ./configs/product-config.yaml:/etc/product-service/config.yaml
+    ports:
+      - "8200:8200"
+    depends_on: [product-service-migration]
+  redis:
+    container_name: redis
+    image: redis:8.2.1
+    ports:
+      - "6379:6379"
+  api-gateway:
+    container_name: api-gateway-service
+    ports:
+      - "8300:8300"
+    build:
+      context: ../
+      dockerfile: docker/dev.Dockerfile
+    volumes:
+      - ./configs/api-gateway-config.yaml:/etc/api-gateway/config.yaml
+    depends_on:
+      postgres:
+        condition: service_healthy

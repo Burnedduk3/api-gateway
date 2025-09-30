@@ -17,23 +17,6 @@ func TestBackend_GetURL(t *testing.T) {
 		expectedURL string
 	}{
 		{
-			name: "simple path rewrite",
-			backend: &entities.Backend{
-				Host:        "http://service-a:8080",
-				StripPrefix: "/api/v1",
-			},
-			requestPath: "/api/v1/users",
-			expectedURL: "http://service-a:8080/users",
-		},
-		{
-			name: "no strip prefix",
-			backend: &entities.Backend{
-				Host: "http://service-b:8080",
-			},
-			requestPath: "/users",
-			expectedURL: "http://service-b:8080/users",
-		},
-		{
 			name: "with path prefix addition",
 			backend: &entities.Backend{
 				Host:       "http://service-c:8080",

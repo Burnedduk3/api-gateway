@@ -21,14 +21,25 @@ func NewAuthValidator(log logger.Logger, apiKeyRepo ports.ApiKeyRepository) port
 }
 
 func (v ValidatorRepository) Validate(ctx context.Context, token string, policy *entities.AuthPolicy) error {
-	//TODO implement me
-	panic("implement me")
+	isValidToken, err := v.apiKeyRepo.IsValidKey(ctx, token)
+	if err != nil {
+		return err
+	}
+	if !isValidToken {
+		v.logger.Error("invalid api key", "token", token)
+		return errors.New("invalid api key")
+	}
+	return nil
 }
 
 func (v ValidatorRepository) ExtractToken(ctx context.Context, headers map[string][]string, authType string) (string, error) {
 	apiToken := ""
-	if authType != entities.AuthTypeAPIKey {
-		apiToken := headers["x-api-key"][0]
+	if authType == entities.AuthTypeAPIKey {
+		apiTokenHeader := headers["X-Api-Key"]
+		if len(apiTokenHeader) == 0 {
+			return "", errors.New("missing api key")
+		}
+		apiToken = apiTokenHeader[0]
 		isValid, err := v.apiKeyRepo.IsValidKey(ctx, apiToken)
 		if err != nil {
 			return "", err
@@ -38,5 +49,5 @@ func (v ValidatorRepository) ExtractToken(ctx context.Context, headers map[strin
 		}
 		return apiToken, nil
 	}
-	return apiToken, nil
+	return "apiToken", errors.New("invalid auth type")
 }

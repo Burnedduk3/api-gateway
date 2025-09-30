@@ -12,7 +12,7 @@ server:
     allow_origins: ["*"]
 
 database:
-  host: "192.168.2.61"
+  host: "postgres"
   port: "5432"
   username: "product_user"
   password: "admin"

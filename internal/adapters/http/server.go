@@ -51,12 +51,8 @@ func NewServer(cfg *config.Config, log logger.Logger, connections *infrastructur
 }
 
 func (s *Server) setupMiddleware() {
-	// Request ID middleware
-	s.echo.Use(middleware.RequestID())
-
 	// Replace Echo's logger with our custom Zap logger
 	s.echo.Use(logging.ZapLogger(s.logger.With("component", "http")))
-	s.echo.Use(security.RequestID(s.logger.With("component", "security")))
 
 	// Security headers
 	s.echo.Use(middleware.SecureWithConfig(middleware.SecureConfig{
@@ -96,11 +92,11 @@ func (s *Server) setupRoutes(cfg *config.Config) {
 	}
 	authValidator := auth.NewAuthValidator(s.logger, s.connections.GetApiKeyRepo())
 	authUseCase := usecases.NewAuthenticateRequestUseCase(authValidator, s.logger)
-	routeUseCase := usecases.NewRouteRequestUseCase(proxyClientRepo, memoryRouteRepo, s.logger)
+	routeUseCase := usecases.NewRouteRequestUseCase(cfg.Server.PathPrefix, proxyClientRepo, memoryRouteRepo, s.logger)
 	gatewayHandler := handlers.NewGatewayHandler(s.logger, routeUseCase, authUseCase)
-	// API v1 routes
-	v1 := s.echo.Group("/api/v1")
-	health := v1.Group("/health")
+	// API routes
+	api := s.echo.Group(cfg.Server.PathPrefix)
+	health := api.Group("/health")
 
 	// Health endpoints
 	health.GET("/", healthHandler.Health)
@@ -108,9 +104,9 @@ func (s *Server) setupRoutes(cfg *config.Config) {
 	health.GET("/live", healthHandler.Live)
 
 	// Metrics endpoint
-	v1.GET("/metrics", healthHandler.Metrics)
+	api.GET("/metrics", healthHandler.Metrics)
 
-	v1.Any("/*", gatewayHandler.HandleRequest)
+	api.Any("/*", gatewayHandler.HandleRequest, security.RequestID(s.logger.With("component", "security")))
 
 	s.logRegisteredRoutes()
 }
@@ -141,11 +137,10 @@ func (s *Server) parseRoutes(cfg *config.Config) []entities.Route {
 	var routes []entities.Route
 	for _, backend := range cfg.Backends {
 		entityBackend := entities.Backend{
-			Id:          backend.ID,
-			Host:        backend.Host,
-			StripPrefix: backend.StripPrefix,
-			PathPrefix:  backend.PathPrefix,
-			Timeout:     30 * time.Second,
+			Id:         backend.ID,
+			Host:       backend.Host,
+			PathPrefix: backend.PathPrefix,
+			Timeout:    30 * time.Second,
 		}
 		for _, route := range backend.Routes {
 			routes = append(routes, entities.Route{

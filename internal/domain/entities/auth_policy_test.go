@@ -75,9 +75,6 @@ func TestAuthPolicy_Validate(t *testing.T) {
 			policy: &entities.AuthPolicy{
 				Type:    entities.AuthTypeAPIKey,
 				Enabled: true,
-				Config: map[string]interface{}{
-					"valid_keys": []string{"key1"},
-				},
 			},
 			wantErr: false,
 		},
