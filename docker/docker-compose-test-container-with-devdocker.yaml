@@ -1,5 +1,5 @@
 version: '3.8'
-name: api-gateway-backend-container-test-ecr
+name: api-gateway-backend-container-test-local
 services:
   postgres:
     image: "postgres:17.6"
@@ -80,7 +80,9 @@ services:
     container_name: api-gateway-service
     ports:
       - "8300:8300"
-    image:  049139783164.dkr.ecr.us-east-1.amazonaws.com/develop/api-gateway:1.0.12
+    build:
+      context: ../
+      dockerfile: docker/dev.Dockerfile
     volumes:
       - ./configs/api-gateway-config.yaml:/etc/api-gateway/config.yaml
     depends_on:

@@ -10,7 +10,7 @@ COPY . .
 
 RUN go build -o api-gateway .
 
-FROM alpine:3.22 AS app
+FROM ubuntu:25.04 AS app
 
 WORKDIR /app
 
