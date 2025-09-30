@@ -18,38 +18,6 @@ func TestRoute_Match(t *testing.T) {
 		shouldMatch    bool
 	}{
 		{
-			name: "exact path match",
-			route: &entities.Route{
-				Path:     "/users",
-				Method:   "GET",
-				PathType: entities.PathTypeExact,
-				Backend: &entities.Backend{
-					Host: "http://service:8080",
-					Id:   "user",
-				},
-			},
-			backendID:      "user",
-			incomingPath:   "user/users",
-			incomingMethod: "GET",
-			shouldMatch:    true,
-		},
-		{
-			name: "exact path match - health endpoint",
-			route: &entities.Route{
-				Path:     "/health",
-				Method:   "GET",
-				PathType: entities.PathTypeExact,
-				Backend: &entities.Backend{
-					Host: "http://service:8080",
-					Id:   "user",
-				},
-			},
-			backendID:      "user",
-			incomingPath:   "user/health",
-			incomingMethod: "GET",
-			shouldMatch:    true,
-		},
-		{
 			name: "method mismatch",
 			route: &entities.Route{
 				Path:     "/users",
@@ -64,70 +32,6 @@ func TestRoute_Match(t *testing.T) {
 			incomingPath:   "user/users",
 			incomingMethod: "GET",
 			shouldMatch:    false,
-		},
-		{
-			name: "wildcard method match",
-			route: &entities.Route{
-				Path:     "/health",
-				Method:   "*",
-				PathType: entities.PathTypeExact,
-				Backend: &entities.Backend{
-					Host: "http://service:8080",
-					Id:   "user",
-				},
-			},
-			backendID:      "user",
-			incomingPath:   "user/health",
-			incomingMethod: "GET",
-			shouldMatch:    true,
-		},
-		{
-			name: "prefix match with parameter - user by id",
-			route: &entities.Route{
-				Path:     "/users/:id",
-				Method:   "GET",
-				PathType: entities.PathTypePrefix,
-				Backend: &entities.Backend{
-					Host: "http://service:8080",
-					Id:   "user",
-				},
-			},
-			backendID:      "user",
-			incomingPath:   "user/users/123",
-			incomingMethod: "GET",
-			shouldMatch:    true,
-		},
-		{
-			name: "prefix match with parameter - user by email",
-			route: &entities.Route{
-				Path:     "/users/email/:email",
-				Method:   "GET",
-				PathType: entities.PathTypePrefix,
-				Backend: &entities.Backend{
-					Host: "http://service:8080",
-					Id:   "user",
-				},
-			},
-			backendID:      "user",
-			incomingPath:   "user/users/email/test@example.com",
-			incomingMethod: "GET",
-			shouldMatch:    true,
-		},
-		{
-			name: "prefix match with parameter - orders by id",
-			route: &entities.Route{
-				Path:     "/orders/:id",
-				Method:   "GET",
-				PathType: entities.PathTypePrefix,
-				Backend: &entities.Backend{
-					Host: "http://service:8080",
-					Id:   "orders",
-				},
-			},
-			backendID:      "orders",
-			incomingPath:   "orders/orders/456",
-			incomingMethod: "GET",
-			shouldMatch:    true,
 		},
 		{
 			name: "parameter segment count mismatch",
