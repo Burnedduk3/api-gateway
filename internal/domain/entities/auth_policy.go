@@ -1,16 +1,13 @@
 package entities
 
 const (
-	AuthTypeBasic  string = "basic"
-	AuthTypeBearer string = "bearer"
 	AuthTypeAPIKey string = "api"
 	AuthTypeNone   string = "none"
 )
 
 type AuthPolicy struct {
-	Type    string                 `json:"type"`
-	Enabled bool                   `json:"enabled"`
-	Config  map[string]interface{} `json:"config"`
+	Type    string `json:"type"`
+	Enabled bool   `json:"enabled"`
 }
 
 func (ap *AuthPolicy) RequiresAuth() bool {

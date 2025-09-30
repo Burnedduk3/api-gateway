@@ -49,6 +49,13 @@ func getZapConfig(env string) zap.Config {
 		config.EncoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
 		return config
 
+	case "test":
+		config := zap.NewDevelopmentConfig()
+		config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+		config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+		config.EncoderConfig.EncodeCaller = zapcore.FullCallerEncoder
+		return config
+
 	case "production", "prod":
 		config := zap.NewProductionConfig()
 		config.EncoderConfig.TimeKey = "timestamp"

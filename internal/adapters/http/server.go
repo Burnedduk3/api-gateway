@@ -1,16 +1,22 @@
 package http
 
 import (
+	"api-gateway/internal/adapters/auth"
 	"api-gateway/internal/adapters/http/handlers"
 	"api-gateway/internal/adapters/http/middlewares/logging"
+	"api-gateway/internal/adapters/persistence/repositories"
+	"api-gateway/internal/application/usecases"
 	"api-gateway/internal/config"
+	"api-gateway/internal/domain/entities"
 	"api-gateway/internal/infrastructure"
 	"api-gateway/pkg/logger"
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"go.uber.org/zap"
 )
 
 type Server struct {
@@ -38,7 +44,7 @@ func NewServer(cfg *config.Config, log logger.Logger, connections *infrastructur
 	server.setupMiddleware()
 
 	// Setup routes
-	server.setupRoutes()
+	server.setupRoutes(cfg)
 
 	return server, nil
 }
@@ -49,9 +55,6 @@ func (s *Server) setupMiddleware() {
 
 	// Replace Echo's logger with our custom Zap logger
 	s.echo.Use(logging.ZapLogger(s.logger.With("component", "http")))
-
-	// Recovery middleware
-	s.echo.Use(middleware.Recover())
 
 	// Security headers
 	s.echo.Use(middleware.SecureWithConfig(middleware.SecureConfig{
@@ -75,46 +78,38 @@ func (s *Server) setupMiddleware() {
 	}))
 }
 
-func (s *Server) setupRoutes() {
+func (s *Server) setupRoutes(cfg *config.Config) {
 	// Health check handlers with database connections
+	routes := s.parseRoutes(cfg)
+	ctx := context.Background()
 	healthHandler := handlers.NewHealthHandler(s.logger, s.connections)
-
-	// Product repository and use cases setup
-
+	proxyClientRepo := handlers.NewProxyClient(s.logger, 60*time.Second)
+	memoryRouteRepo := repositories.NewMemoryRouteRepo(s.logger)
+	for _, route := range routes {
+		err := memoryRouteRepo.Save(ctx, &route)
+		if err != nil {
+			s.logger.Fatal("failed to save route", zap.Error(err))
+			return
+		}
+	}
+	authValidator := auth.NewAuthValidator(s.logger, s.connections.GetApiKeyRepo())
+	authUseCase := usecases.NewAuthenticateRequestUseCase(authValidator, s.logger)
+	routeUseCase := usecases.NewRouteRequestUseCase(proxyClientRepo, memoryRouteRepo, s.logger)
+	gatewayHandler := handlers.NewGatewayHandler(s.logger, routeUseCase, authUseCase)
 	// API v1 routes
 	v1 := s.echo.Group("/api/v1")
 
+	v1.Any("/", gatewayHandler.HandleRequest)
+
+	health := v1.Group("/health")
+
 	// Health endpoints
-	v1.GET("/health", healthHandler.Health)
-	v1.GET("/health/ready", healthHandler.Ready)
-	v1.GET("/health/live", healthHandler.Live)
+	health.GET("/", healthHandler.Health)
+	health.GET("/ready", healthHandler.Ready)
+	health.GET("/live", healthHandler.Live)
 
 	// Metrics endpoint
 	v1.GET("/metrics", healthHandler.Metrics)
-
-	//// Product endpoints
-	//products := v1.Group("/products")
-	//{
-	//	// Core CRUD operations
-	//	products.POST("", productHandler.CreateProduct)    // Create product
-	//	products.GET("", productHandler.ListProducts)      // List products with pagination
-	//	products.GET("/:id", productHandler.GetProduct)    // Get product by ID
-	//	products.PUT("/:id", productHandler.UpdateProduct) // Update product
-	//
-	//	// SKU-based operations
-	//	products.GET("/sku/:sku", productHandler.GetProductBySKU) // Get product by SKU
-	//
-	//	// Stock management
-	//	products.PATCH("/:id/stock", productHandler.UpdateProductStock) // Update stock only
-	//
-	//	// Price management
-	//	products.PATCH("/:id/price", productHandler.UpdateProductPrice) // Update price only
-	//
-	//	// Status management
-	//	products.PATCH("/:id/activate", productHandler.ActivateProduct)       // Activate product
-	//	products.PATCH("/:id/deactivate", productHandler.DeactivateProduct)   // Deactivate product
-	//	products.PATCH("/:id/discontinue", productHandler.DiscontinueProduct) // Discontinue product
-	//}
 
 	s.logRegisteredRoutes()
 }
@@ -139,4 +134,31 @@ func (s *Server) Start() error {
 func (s *Server) Shutdown(ctx context.Context) error {
 	s.logger.Info("Shutting down Product Service HTTP server...")
 	return s.echo.Shutdown(ctx)
+}
+
+func (s *Server) parseRoutes(cfg *config.Config) []entities.Route {
+	var routes []entities.Route
+	for _, backend := range cfg.Backends {
+		entityRoutes := []entities.Route{}
+		entitiyBackend := entities.Backend{
+			Host:        backend.Host,
+			StripPrefix: backend.StripPrefix,
+			PathPrefix:  backend.PathPrefix,
+			Timeout:     30 * time.Second,
+		}
+		for _, route := range backend.Routes {
+			entityRoutes = append(entityRoutes, entities.Route{
+				ID:       route.ID,
+				Method:   route.Method,
+				Path:     route.Path,
+				PathType: entities.PathType(route.PathType),
+				Enabled:  route.Enabled,
+				Backend:  &entitiyBackend,
+				AuthPolicy: &entities.AuthPolicy{
+					Enabled: route.AuthPolicy.Enabled,
+					Type:    route.AuthPolicy.Type,
+				}})
+		}
+	}
+	return routes
 }

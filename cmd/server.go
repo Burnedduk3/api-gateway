@@ -64,15 +64,8 @@ func runServer(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Ensure connections are closed on exit
-	defer func() {
-		if err := connections.Close(); err != nil {
-			log.Error("Failed to close database connections", "error", err)
-		}
-	}()
-
 	// Create HTTP server with database connections
-	server, err := http.NewServer(cfg, log, connections) // Updated
+	server, err := http.NewServer(cfg, log, connections)
 	if err != nil {
 		log.Fatal("Failed to create server", "error", err)
 		return err

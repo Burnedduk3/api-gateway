@@ -10,13 +10,27 @@ import (
 )
 
 type Config struct {
-	Environment string         `mapstructure:"environment"`
-	Version     string         `mapstructure:"version"`
-	LogLevel    string         `mapstructure:"loglevel"`
-	Server      ServerConfig   `mapstructure:"server"`
-	Database    DatabaseConfig `mapstructure:"database"`
-	Security    SecurityConfig `mapstructure:"security"`
-	Logging     LoggingConfig  `mapstructure:"logging"`
+	Environment string                 `mapstructure:"environment"`
+	Version     string                 `mapstructure:"version"`
+	LogLevel    string                 `mapstructure:"loglevel"`
+	Server      ServerConfig           `mapstructure:"server"`
+	Database    DatabaseConfig         `mapstructure:"database"`
+	Security    SecurityConfig         `mapstructure:"security"`
+	Logging     LoggingConfig          `mapstructure:"logging"`
+	Redis       RedisConfig            `mapstructure:"redis"`
+	Backends    []BackendServiceConfig `mapstructure:"backends"`
+}
+
+type RedisConfig struct {
+	Host         string        `mapstructure:"host"`
+	Port         string        `mapstructure:"port"`
+	Password     string        `mapstructure:"password"`
+	Database     int           `mapstructure:"database"`
+	MaxRetries   int           `mapstructure:"max_retries"`
+	PoolSize     int           `mapstructure:"pool_size"`
+	DialTimeout  time.Duration `mapstructure:"dial_timeout"`
+	ReadTimeout  time.Duration `mapstructure:"read_timeout"`
+	WriteTimeout time.Duration `mapstructure:"write_timeout"`
 }
 
 type ServerConfig struct {
@@ -37,6 +51,27 @@ type CORSConfig struct {
 type SecurityConfig struct {
 	RateLimitRPS   int `mapstructure:"rate_limit_rps"`
 	RateLimitBurst int `mapstructure:"rate_limit_burst"`
+}
+
+type AuthPolicy struct {
+	Type    string `mapstructure:"type"`
+	Enabled bool   `mapstructure:"enabled"`
+}
+type RouteConfig struct {
+	ID         string      `mapstructure:"id"`
+	Method     string      `mapstructure:"method"`
+	Path       string      `mapstructure:"path"`
+	PathType   string      `mapstructure:"path_type,omitempty"`
+	Enabled    bool        `mapstructure:"enabled"`
+	AuthPolicy *AuthPolicy `mapstructure:"auth_policy"`
+}
+
+type BackendServiceConfig struct {
+	Host        string        `mapstructure:"host"`
+	ID          string        `mapstructure:"id"`
+	StripPrefix string        `mapstructure:"strip_prefix, omitempty"`
+	PathPrefix  string        `mapstructure:"path_prefix, omitempty"`
+	Routes      []RouteConfig `mapstructure:"routes"`
 }
 
 func Load(configFile, env string) (*Config, error) {
@@ -95,6 +130,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("server.cors.allow_origins", []string{"*"})
 	v.SetDefault("server.cors.allow_methods", []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"})
 	v.SetDefault("server.cors.allow_headers", []string{"*"})
+	v.SetDefault("backends", []string{})
 
 	DatabaseDefaults(v)
 

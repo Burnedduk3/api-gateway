@@ -71,3 +71,8 @@ services:
     ports:
       - "8200:8200"
     depends_on: [product-service-migration]
+  redis:
+    container_name: redis
+    image: redis:8.2.1
+    ports:
+      - "6379:6379"

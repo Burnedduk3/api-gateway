@@ -4,20 +4,57 @@ environment: development
 version: 1.0.0
 
 server:
-  port: "8100"
+  port: "8300"
   host: "0.0.0.0"
   read_timeout: "30s"
   write_timeout: "30s"
   cors:
     allow_origins: ["*"]
 
-database:
+redis:
   host: "localhost"
-  port: "5432"
-  username: "api-gateway"
-  password: "admin"
-  database: "api-gateway"
-  ssl_mode: "disable"
+  port: "6379"
+  password: ""
+  database: 0
+
+backends:
+  - host: "http://localhost:8000"
+    id: "user"
+    path_prefix: "/api/v1/"
+    routes:
+      - id: "ready"
+        method: "GET"
+        path: "/health/ready"
+        path_type: "Exact"
+        enabled: "true"
+        auth_policy:
+          type: "none"
+          enabled: "true"
+  - host: "http://localhost:8100/api/v1/orders"}
+    id: "orders"
+    path_prefix: "/api/v1/"
+    strip_prefix: "/api/v1/orders"
+    routes:
+      - id: "ready"
+        method: "GET"
+        path: "/health/ready"
+        path_type: "Exact"
+        enabled: "true"
+        auth_policy:
+          type: "none"
+          enabled: "true"
+  - host: "http://localhost:8200/api/v1/"
+    id: "product"
+    routes:
+      - id: "ready"
+        method: "GET"
+        path: "/health/ready"
+        pathType: "Exact"
+        enabled: "true"
+        auth_policy:
+          type: "none"
+          enabled: "true"
+
 
 security:
   rate_limit_rps: 100

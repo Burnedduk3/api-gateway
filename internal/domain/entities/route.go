@@ -15,19 +15,18 @@ const (
 )
 
 type Route struct {
-	ID       string   `json:"id,omitempty"`
-	Method   string   `json:"name" json:"method,omitempty"`
-	Path     string   `json:"path" json:"path,omitempty"`
+	ID       string   `json:"id"`
+	Method   string   `json:"method"`
+	Path     string   `json:"path"`
 	PathType PathType `json:"pathType,omitempty"`
 	Enabled  bool
 
 	Backend    *Backend
-	AuthPolicy *AuthPolicy
+	AuthPolicy *AuthPolicy `json:"authPolicy,omitempty"`
 }
 
-func NewRoute(id, method, path, pathType string, enabled bool, backend *Backend, authPolicy *AuthPolicy) *Route {
+func NewRoute(method, path, pathType string, enabled bool, backend *Backend, authPolicy *AuthPolicy) *Route {
 	return &Route{
-		ID:         id,
 		Method:     method,
 		Path:       path,
 		PathType:   PathType(pathType),

@@ -8,6 +8,7 @@ import (
 )
 
 type Backend struct {
+	Id              string
 	Host            string
 	StripPrefix     string
 	PathPrefix      string
