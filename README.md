@@ -147,6 +147,8 @@ Login Succeeded
 This runs backend services in Docker, allowing you to run the API Gateway locally for development:
 
 ```bash
+#
+chmod u+x docker/scripts/init-db.sh
 # Start backend services
 docker-compose -f docker/docker-compose-localdev.yaml up -d
 
@@ -163,6 +165,7 @@ go build -o api-gateway .
 Run everything in Docker, including the API Gateway:
 
 ```bash
+chmod u+x docker/scripts/init-db.sh
 # Using locally built image
 docker-compose -f docker/docker-compose-test-container-with-devdocker.yaml up -d
 
