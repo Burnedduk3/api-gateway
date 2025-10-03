@@ -220,7 +220,7 @@ After hitting the health check, the gateway automatically generates 2 test token
 
 ```bash
 # Test with VALID token (should work)
-curl -H "X-API-Key: key-123" http://localhost:8300/api/user/users/1
+curl -H "X-API-Key: key-123" -H "X-Request-ID: <ID>" "http://localhost:8300/api/user/users?page=0&page_size=3"
 ```
 ```json
 {
@@ -237,7 +237,7 @@ curl -H "X-API-Key: key-123" http://localhost:8300/api/user/users/1
 ```
 ```bash
 # Test with INVALID token (should fail with 401/403)
-curl -H "X-API-Key: key-1234" http://localhost:8300/api/user/users/1
+curl -H "X-API-Key: key-1234" -H "X-Request-ID: <ID>" "http://localhost:8300/api/user/users?page=0&page_size=3"
 ```
 ```json
 {
@@ -247,7 +247,7 @@ curl -H "X-API-Key: key-1234" http://localhost:8300/api/user/users/1
 ```
 ```bash
 # Test without token (should fail with 401/403)
-curl http://localhost:8300/api/user/users/1
+curl -H "X-Request-ID: <ID>" "http://localhost:8300/api/user/users?page=0&page_size=3"
 ```
 ```json
 {
