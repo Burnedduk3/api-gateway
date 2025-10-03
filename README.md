@@ -355,7 +355,7 @@ for selecting a specific service add the first path segment after `/api` like ap
 Most endpoints require an API token. Include it in the `X-API-Key` header:
 
 ```bash
-curl -H "X-API-Key: key-123" http://localhost:8300/api/v1/users
+curl -H "X-API-Key: key-123" -H "X-Request-ID: <ID>" http://localhost:8300/api/v1/users
 ```
 
 **Remember**: Tokens are automatically generated on first health check:
