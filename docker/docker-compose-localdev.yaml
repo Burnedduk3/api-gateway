@@ -1,5 +1,5 @@
 version: '3.8'
-name: api-gateway-backend
+name: api-gateway-backend-local-dev
 services:
   postgres:
     image: "postgres:17.6"
