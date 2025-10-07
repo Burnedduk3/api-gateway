@@ -93,7 +93,7 @@ func Load(configFile, env string) (*Config, error) {
 	}
 
 	// Environment variables
-	v.SetEnvPrefix("PRODUCT_SERVICE")
+	v.SetEnvPrefix("API_GATEWAY")
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
 	// Read config file
